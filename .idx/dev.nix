@@ -21,6 +21,12 @@
     pkgs.xdotool
     pkgs.libGLU
     pkgs.mesa
+    
+    # Add font packages
+    pkgs.dejavu_fonts
+    pkgs.liberation_ttf
+    pkgs.ubuntu_font_family
+    pkgs.fontconfig
   ];
 
   env = {
@@ -30,6 +36,11 @@
     MOZ_DISABLE_RDD_SANDBOX = "1";
     MOZ_ENABLE_WAYLAND = "0";
     DBUS_FATAL_WARNINGS = "0";
+    NGROK_AUTHTOKEN = "your_ngrok_token_here";
+    
+    # Configure font paths
+    FONTCONFIG_PATH = "${pkgs.fontconfig.out}/etc/fonts";
+    FONTCONFIG_FILE = "${pkgs.fontconfig.out}/etc/fonts/fonts.conf";
   };
   
   idx = {
@@ -82,11 +93,34 @@
           done
           echo "X server ready"
 
-          # Set background color
-          DISPLAY=:1 ${pkgs.xorg.xsetroot}/bin/xsetroot -solid black
+          # Configure font paths
+          echo "Setting up font paths..."
+          DISPLAY=:1 ${pkgs.xorg.xset}/bin/xset +fp ${pkgs.dejavu_fonts}/share/fonts/truetype
+          DISPLAY=:1 ${pkgs.xorg.xset}/bin/xset +fp ${pkgs.liberation_ttf}/share/fonts/truetype
+          DISPLAY=:1 ${pkgs.xorg.xset}/bin/xset +fp ${pkgs.ubuntu_font_family}/share/fonts/truetype
+          DISPLAY=:1 ${pkgs.xorg.xset}/bin/xset fp rehash
+          ${pkgs.fontconfig}/bin/fc-cache -f
 
-          # Start window manager
+          # Set background color
+          DISPLAY=:1 ${pkgs.xorg.xsetroot}/bin/xsetroot -solid grey
+
+          # Start window manager with fixed font configuration
           DISPLAY=:1 ${pkgs.icewm}/bin/icewm -c ${pkgs.writeText "icewm.cfg" ''
+            # Fixed font configuration
+            MenuFontName = "DejaVu Sans-12:monospace"
+            ToolButtonFontName = "DejaVu Sans-12:monospace"
+            StatusFontName = "DejaVu Sans-12:monospace"
+            QuickSwitchFontName = "DejaVu Sans-12:monospace"
+            NormalButtonFontName = "DejaVu Sans Bold-12:monospace"
+            ActiveButtonFontName = "DejaVu Sans Bold-12:monospace"
+            MinimizedWindowFontName = "DejaVu Sans Italic-12:monospace"
+            ListBoxFontName = "DejaVu Sans-12:monospace"
+            TaskBarFontName = "DejaVu Sans-12:monospace"
+            ClockFontName = "DejaVu Sans-12:monospace"
+            AOSLabelFontName = "DejaVu Sans-12:monospace"
+            AOSTitleFontName = "DejaVu Sans Bold-12:monospace"
+            
+            # Other IceWM settings
             TaskBarShowTaskBar=1
             TaskBarShowStartButton=1
             TaskBarShowClock=1
